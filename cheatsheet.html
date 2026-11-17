@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<title>Presenter cheat sheet</title>
+<style>
+  @page { size: A4; margin: 11mm 12mm; }
+  :root { --ink:#14201B; --slate:#4F5D57; --rule:#CDD4D0; --spruce:#0B6B5D; --amber:#A04A00; }
+  * { box-sizing: border-box; }
+  body { margin: 0 auto; max-width: 210mm; padding: 10mm 12mm; color: var(--ink); background: #fff;
+         font: 8.7pt/1.27 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+  h1 { font-size: 14pt; margin: 0; font-weight: 600; }
+  h2 { font-size: 9.6pt; margin: 0 0 1.5mm; font-weight: 600; border-bottom: 1.5px solid var(--ink); padding-bottom: .8mm; }
+  .sub { color: var(--slate); margin: .5mm 0 3mm; }
+  .grid { display: grid; grid-template-columns: 1.08fr 1fr; gap: 5mm; }
+  section { margin-bottom: 2.6mm; }
+  ol, ul { margin: 0; padding: 0; list-style: none; }
+  .ros li { display: grid; grid-template-columns: 4.5mm 1fr 9mm; gap: 1.5mm; padding: .55mm 0; border-bottom: .5px solid var(--rule); }
+  .ros .n { font: 600 8pt Consolas, monospace; color: var(--slate); padding-top: .3mm; }
+  .ros .t { font: 8pt Consolas, monospace; text-align: right; color: var(--slate); }
+  .ros b { font-weight: 600; }
+  .ros .short b::after { content: " \25CF"; color: var(--spruce); font-size: 7pt; }
+  .ros .hl { display: block; color: var(--ink); font-size: 8.3pt; }
+  .tbl { width: 100%; border-collapse: collapse; }
+  .tbl td { padding: .8mm 1mm .8mm 0; border-bottom: .5px solid var(--rule); vertical-align: top; }
+  .tbl td:first-child { font-weight: 600; width: 27%; }
+  .q b { display: block; font-weight: 600; }
+  .q li { padding: .6mm 0; border-bottom: .5px solid var(--rule); }
+  .q .k { font: 600 8pt Consolas, monospace; color: var(--spruce); margin-right: 1mm; }
+  .own li { padding: .7mm 0; }
+  .own b { font-weight: 600; }
+  .fill { color: var(--amber); border: 1px solid var(--amber); padding: 0 .6mm; font: 600 7.5pt Consolas, monospace; white-space: nowrap; }
+  .draft { outline: 1px dotted var(--amber); }
+  .warn { border: 1.5px solid var(--amber); color: var(--amber); padding: 1.2mm 2mm; margin-bottom: 3mm; font-weight: 600; }
+  .keys { font-size: 8.4pt; color: var(--slate); }
+  kbd { font: 600 7.5pt Consolas, monospace; border: .5px solid var(--slate); border-radius: 2px; padding: 0 .6mm; color: var(--ink); }
+  .three li { padding: .5mm 0 .5mm 2.5mm; border-left: 2px solid var(--ink); margin-bottom: 1mm; font-weight: 600; }
+  .screen-only { margin-bottom: 4mm; font-size: 10pt; }
+  .screen-only button { font: inherit; padding: 1mm 3mm; border: 1px solid var(--ink); background: #fff; cursor: pointer; }
+  @media print { .screen-only { display: none; } body { padding: 0; } }
+</style>
+</head>
+<body>
+<div class="screen-only"><button type="button" onclick="window.print()">Print (A4)</button> &nbsp; <a href="index.html">Back to the demo</a></div>
+<div id="sheet"></div>
+<script src="config.js"></script>
+<script src="corpus.js"></script>
+<script src="content.js"></script>
+<script>
+(function () {
+  var C = CONFIG, X = CONTENT, K = CORPUS;
+  function esc(s) { return String(s == null ? "" : s).replace(/[&<>"]/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]; }); }
+  function strip(s) { return String(s || "").replace(/\[\[([a-z0-9]+)(?:\|([^\]]+))?\]\]/g, function (_, k, l) { return l || (X.glossary[k] || {}).term || k; }); }
+  function isFill(v) { return v == null || v === "" || (typeof v === "string" && /^\s*\[FILL/.test(v)); }
+  function F(v) {
+    if (isFill(v)) return '<span class="fill">[FILL]</span>';
+    if (/^\[DRAFT\]/.test(v)) return '<span class="draft">' + esc(String(v).replace(/^\[DRAFT\]\s*/, "")) + "</span>";
+    return esc(v);
+  }
+  var short = ["opening", "problem", "architecture", "simulation", "adoption", "wrong", "close"];
+  var mins = function (id) { return (C.sectionTimings || {})[id] || 0; };
+  var total = X.sections.reduce(function (a, s) { return a + mins(s.id); }, 0);
+  var shortTotal = X.sections.filter(function (s) { return short.indexOf(s.id) !== -1; }).reduce(function (a, s) { return a + mins(s.id); }, 0);
+
+  var fills = 0;
+  (function walk(v) {
+    if (Array.isArray(v)) v.forEach(walk);
+    else if (v && typeof v === "object") Object.keys(v).forEach(function (k) { walk(v[k]); });
+    else if (typeof v === "string" && (isFill(v) || /^\[DRAFT\]/.test(v))) fills++;
+  })(C);
+
+  var own = function (v) {
+    var m = { built: "I built it", designed: "I designed it, the team built it", prototyped: "I prototyped it, the team productionised it", platform: "platform service" };
+    return isFill(v) ? F(v) : esc(m[v] || v);
+  };
+
+  var html =
+    (fills ? '<div class="warn">' + fills + " placeholders or drafts still in config.js. Fill them before printing the final copy.</div>" : "") +
+    "<h1>Document-retrieval agent: presenter cheat sheet</h1>" +
+    '<p class="sub">' + F(C.presenterName) + " · Anonymised recreation, synthetic data · " + total + " min presenting + " + (C.questionsMinutes || 10) + " min questions · short path ● " + shortTotal + " min</p>" +
+    '<div class="grid"><div>' +
+      "<section><h2>Run of show: the headlines</h2><ol class=\"ros\">" +
+        X.sections.map(function (s, i) {
+          return '<li class="' + (short.indexOf(s.id) !== -1 ? "short" : "") + '"><span class="n">' + (i + 1) + "</span><span><b>" + esc(s.nav) + '</b><span class="hl">' + esc(s.headline) + '</span></span><span class="t">' + mins(s.id) + "m</span></li>";
+        }).join("") + "</ol></section>" +
+      '<section><h2>Three things to remember</h2><ul class="three">' + X.closeThings.map(function (t) { return "<li>" + esc(t) + "</li>"; }).join("") + "</ul></section>" +
+    "</div><div>" +
+      '<section><h2>The analogy (used everywhere)</h2><table class="tbl">' +
+        X.analogy.map(function (a) { return "<tr><td>" + esc(a.name) + "</td><td>" + esc(a.plain) + '<br><span style="color:var(--slate)">= ' + esc(strip(a.real)) + "</span></td></tr>"; }).join("") + "</table></section>" +
+      '<section><h2>The four preset queries</h2><ol class="q">' +
+        K.presets.map(function (p, i) { return '<li><b><span class="k">' + (i + 1) + "</span>" + esc(p.label) + ": “" + esc(p.query) + "”</b>" + esc(p.proves) + "</li>"; }).join("") +
+        '<li><b><span class="k">✂</span>Chunking toggle on query 1</b>Fixed 500-char cuts Table 2 mid-row. The answer becomes “63 weeks”: cited, passes the gate, and wrong (63 is the longest wait; the median is 41).</li>' +
+      "</ol></section>" +
+      '<section><h2>What I did, exactly</h2><ul class="own">' +
+        "<li><b>Led:</b> technical design across " + F(C.agentsLed) + " GenAI agents.</li>" +
+        "<li><b>I built:</b> the indexing pipeline, the FastAPI service, the LangChain LCEL chain, the Azure AI Search integration; Copilot Studio topics for " + F(C.otherAgents.builtTopicsFor) + " simpler agents.</li>" +
+        "<li><b>I designed, team built</b> (my pattern, my review): the other " + F(C.otherAgents.designedTeamBuilt) + " agents.</li>" +
+        "<li><b>I prototyped, team productionised:</b> table-extraction chunking (a junior engineer).</li>" +
+        "<li><b>This agent’s Copilot Studio topic:</b> " + own(C.ownership.copilot) + ". <b>Review branch:</b> " + own(C.ownership.review) + ".</li>" +
+        "<li><b>BA, change:</b> discovery, stakeholder map, MoSCoW requirements, success measures; the board case (" + F(C.businessCase.funding) + ", " + F(C.businessCase.wonBy) + " won by the guardrail demo).</li>" +
+      "</ul></section>" +
+      '<section><h2>Keys</h2><p class="keys"><kbd>→</kbd>/<kbd>Space</kbd> next (steps the simulator in guided mode) · <kbd>←</kbd> back · <kbd>1</kbd>–<kbd>4</kbd> simulator presets · <kbd>M</kbd> menu · <kbd>N</kbd> notes (pop-out available) · <kbd>Q</kbd> questions · <kbd>D</kbd> technical detail · <kbd>T</kbd> timer (<kbd>Shift</kbd>+<kbd>T</kbd> reset) · <kbd>C</kbd> clean mode · <kbd>L</kbd> theme · <kbd>Esc</kbd> close</p></section>' +
+    "</div></div>";
+  document.getElementById("sheet").innerHTML = html;
+})();
+</script>
+</body>
+</html>
