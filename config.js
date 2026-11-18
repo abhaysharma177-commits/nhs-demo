@@ -56,16 +56,16 @@ var CONFIG = {
   ],
 
   // The manual lookup today. lane: "manager" | "documents" | "colleagues".
-  // Per-step timings were never measured, so only the 30-45 minute total is shown.
+  // Per-step minutes are rough estimates (never measured) that add up to ~39, inside the observed 30-45.
   // `worst: true` marks the two steps that revealed the real problem was trust.
   currentStateSteps: [
-    { lane: "manager",    step: "A question arrives", pain: "Usually needed for a meeting or a return, so it can't wait" },
-    { lane: "documents",  step: "Search shared drives and folders", pain: "Figures sit across Word documents, PDF reports and legacy exports" },
-    { lane: "documents",  step: "Open and scan likely documents", pain: "No way to search inside them all at once" },
-    { lane: "manager",    step: "Which document is current?", pain: "Several versions of the same report, and no quick way to tell which is latest", worst: true },
-    { lane: "colleagues", step: "Ask a colleague who might know", pain: "Costs someone else's time, and the answer is often second-hand" },
-    { lane: "manager",    step: "Is this figure right?", pain: "No quick way to check a figure against its source, so people double-check or re-derive it", worst: true },
-    { lane: "manager",    step: "Copy the figure into the report", pain: "Re-keyed by hand, with no link back to where it came from" }
+    { lane: "manager",    step: "A question arrives", minutes: "~1", pain: "Usually needed for a meeting or a return, so it can't wait" },
+    { lane: "documents",  step: "Search shared drives and folders", minutes: "~8", pain: "Figures sit across Word documents, PDF reports and legacy exports" },
+    { lane: "documents",  step: "Open and scan likely documents", minutes: "~10", pain: "No way to search inside them all at once" },
+    { lane: "manager",    step: "Which document is current?", minutes: "~7", pain: "Several versions of the same report, and no quick way to tell which is latest", worst: true },
+    { lane: "colleagues", step: "Ask a colleague who might know", minutes: "~6", pain: "Costs someone else's time, and the answer is often second-hand" },
+    { lane: "manager",    step: "Is this figure right?", minutes: "~5", pain: "No quick way to check a figure against its source, so people double-check or re-derive it", worst: true },
+    { lane: "manager",    step: "Copy the figure into the report", minutes: "~2", pain: "Re-keyed by hand, with no link back to where it came from" }
   ],
 
   // Who mattered. power/interest are 0–1 positions on the grid (my estimate: confirm below).
